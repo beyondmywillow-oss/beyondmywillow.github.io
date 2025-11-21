@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Defense Roadmap</title>
     
-    <!-- Tailwind CSS (인터넷 필요) -->
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     
     <!-- Font -->
@@ -13,7 +13,6 @@
 
     <style>
         body { font-family: 'Pretendard', sans-serif; -webkit-tap-highlight-color: transparent; }
-        /* 모바일 터치감 개선 */
         button:active { transform: scale(0.98); }
     </style>
 </head>
@@ -52,12 +51,13 @@
                 </div>
             </header>
 
-            <!-- Dashboard (Mobile Optimized) -->
+            <!-- Dashboard (Updated Goal) -->
             <div class="grid grid-cols-3 gap-3">
                 <div class="bg-blue-50 p-3 rounded-2xl border border-blue-100 flex flex-col justify-between text-center">
-                    <span class="text-[10px] font-bold text-blue-400 uppercase tracking-wider block mb-1">Goal</span>
+                    <span class="text-[10px] font-bold text-blue-400 uppercase tracking-wider block mb-1">Target</span>
                     <div>
-                        <div class="text-lg font-bold text-slate-800 leading-tight">작성<br>완료</div>
+                        <!-- 수정됨: 작성 완료 -> 가제본 전달 -->
+                        <div class="text-lg font-bold text-slate-800 leading-tight">가제본<br>전달</div>
                         <div class="text-[10px] font-medium text-blue-600 mt-1">12.10(수)</div>
                     </div>
                 </div>
@@ -78,9 +78,7 @@
             </div>
 
             <!-- List Container -->
-            <div id="schedule-list" class="space-y-4">
-                <!-- Javascript가 여기에 리스트를 채워넣습니다 -->
-            </div>
+            <div id="schedule-list" class="space-y-4"></div>
 
             <footer class="text-center py-8 space-y-4">
                 <p class="text-slate-400 text-xs font-medium">
@@ -94,14 +92,12 @@
     </div>
 
     <script>
-        // --- Data & Logic (Vanila JS) ---
         const TODAY = new Date('2025-11-21T00:00:00');
         const DEFENSE_DATE = new Date('2025-12-17T00:00:00');
 
         const defaultSchedule = [
             {
                 id: 1, phase: "실험 및 데이터 확정", dates: "11.21(금) - 11.22(토)",
-                isTarget: false, isDeadline: false, isDday: false,
                 tasks: [
                     { id: 't1-1', text: "실험 최종 마무리 및 데이터 수집 완료", completed: false },
                     { id: 't1-2', text: "Raw Data 백업 및 정리", completed: false }
@@ -109,7 +105,6 @@
             },
             {
                 id: 2, phase: "결과 분석 (뼈대 잡기)", dates: "11.23(일) - 11.26(수)",
-                isTarget: false, isDeadline: false, isDday: false,
                 tasks: [
                     { id: 't2-1', text: "데이터 통계 분석 및 해석", completed: false },
                     { id: 't2-2', text: "[결과] 표(Table) 및 그림(Figure) 제작", completed: false },
@@ -118,7 +113,6 @@
             },
             {
                 id: 3, phase: "핵심 집필: 방법 & 결과", dates: "11.27(목) - 11.30(일)",
-                isTarget: false, isDeadline: false, isDday: false,
                 tasks: [
                     { id: 't3-1', text: "[연구 방법] 작성 (실험 설계 등)", completed: false },
                     { id: 't3-2', text: "[결과] 작성 (도표 해석 위주)", completed: false }
@@ -126,7 +120,6 @@
             },
             {
                 id: 4, phase: "핵심 집필: 서론 & 이론", dates: "12.01(월) - 12.04(목)",
-                isTarget: false, isDeadline: false, isDday: false,
                 tasks: [
                     { id: 't4-1', text: "[이론적 배경] 선행 연구 정리", completed: false },
                     { id: 't4-2', text: "[서론] 연구 필요성 기술", completed: false }
@@ -134,7 +127,6 @@
             },
             {
                 id: 5, phase: "심화 집필: 논의 & 초록", dates: "12.05(금) - 12.08(월)",
-                isTarget: false, isDeadline: false, isDday: false,
                 tasks: [
                     { id: 't5-1', text: "[논의] 결과 의의 및 제언 작성", completed: false },
                     { id: 't5-2', text: "국문/영문 초록(Abstract) 작성", completed: false },
@@ -142,34 +134,33 @@
                 ]
             },
             {
-                id: 6, phase: "최종 편집 (작성 완료)", dates: "12.09(화) - 12.10(수)",
-                isTarget: true, isDeadline: false, isDday: false,
+                id: 6, phase: "최종 편집 및 가제본 전달", dates: "12.09(화) - 12.10(수)",
+                isTarget: true, // 파란색 강조
                 tasks: [
-                    { id: 't6-1', text: "전체 논리 검토 및 오타 수정", completed: false },
-                    { id: 't6-2', text: "지도교수님 최종 확인 요청", completed: false },
-                    { id: 't6-3', text: "★ 심사 1주 전 작성 완료", completed: false }
+                    { id: 't6-1', text: "전체 오타 수정 및 교수님 최종 확인", completed: false },
+                    { id: 't6-2', text: "논문 출력 및 제본 (가제본)", completed: false },
+                    { id: 't6-3', text: "★ 심사 1주 전: 심사위원 가제본 전달", completed: false } // 수정됨
                 ]
             },
             {
-                id: 7, phase: "행정 처리 및 실적 제출", dates: "12.11(목) - 12.12(금)",
-                isTarget: false, isDeadline: true, isDday: false,
+                id: 7, phase: "발표 준비 및 실적 제출", dates: "12.11(목) - 12.12(금)",
+                isDeadline: true, // 보라색 강조
                 tasks: [
-                    { id: 't7-1', text: "논문 가제본/파일 준비", completed: false },
+                    { id: 't7-1', text: "심사 관련 행정 서류 준비", completed: false },
                     { id: 't7-2', text: "★ 12일: 실적 제출 마감 준수", completed: false }
                 ]
             },
             {
-                id: 8, phase: "발표 자료 준비", dates: "12.13(토) - 12.16(화)",
-                isTarget: false, isDeadline: false, isDday: false,
+                id: 8, phase: "발표 자료(PPT) 완성", dates: "12.13(토) - 12.16(화)",
                 tasks: [
-                    { id: 't8-1', text: "심사 발표용 PPT 제작", completed: false },
-                    { id: 't8-2', text: "발표 대본 작성 및 리허설", completed: false },
-                    { id: 't8-3', text: "예상 질문 리스트업", completed: false }
+                    { id: 't8-1', text: "심사 발표용 PPT 제작 및 디자인", completed: false },
+                    { id: 't8-2', text: "대본 작성 및 시간 체크 리허설", completed: false },
+                    { id: 't8-3', text: "예상 질문 리스트업 및 답변 준비", completed: false }
                 ]
             },
             {
                 id: 9, phase: "D-Day: 논문 심사", dates: "12.17(수)",
-                isTarget: false, isDeadline: false, isDday: true,
+                isDday: true, // 검은색 강조
                 tasks: [
                     { id: 't9-1', text: "최종 발표 및 질의응답", completed: false },
                     { id: 't9-2', text: "심사 후 수정사항 정리", completed: false }
@@ -179,7 +170,7 @@
 
         let scheduleData = defaultSchedule;
         try {
-            const saved = localStorage.getItem('defenseRoadmapData_Local');
+            const saved = localStorage.getItem('defenseRoadmapData_Final'); // 키 변경하여 새 데이터 적용
             if (saved) scheduleData = JSON.parse(saved);
         } catch (e) { console.error(e); }
 
@@ -305,12 +296,12 @@
         }
 
         function saveData() {
-            localStorage.setItem('defenseRoadmapData_Local', JSON.stringify(scheduleData));
+            localStorage.setItem('defenseRoadmapData_Final', JSON.stringify(scheduleData));
         }
 
         function resetData() {
             if (confirm("모든 기록을 초기화하시겠습니까?")) {
-                localStorage.removeItem('defenseRoadmapData_Local');
+                localStorage.removeItem('defenseRoadmapData_Final');
                 scheduleData = JSON.parse(JSON.stringify(defaultSchedule));
                 renderList();
                 updateProgress();
