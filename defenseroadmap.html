@@ -2,382 +2,464 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Defense Roadmap</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Bangkok Trip Planner 🥥</title>
     
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     
-    <!-- React & ReactDOM & Babel -->
-    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
-    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <!-- React & ReactDOM -->
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     
+    <!-- Babel -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
     <!-- Font -->
-    <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+    <link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css" rel="stylesheet">
 
     <style>
-        body { font-family: 'Pretendard', sans-serif; }
+        body { font-family: 'Pretendard', sans-serif; background-color: #FDFCF8; }
+        /* 스크롤바 숨기기 */
+        .scrollbar-hide::-webkit-scrollbar { display: none; }
+        .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
     </style>
 </head>
-<body class="bg-gray-50">
+<body>
     <div id="root"></div>
 
     <script type="text/babel">
-        const { useState, useEffect } = React;
+        const { useState, useEffect, useMemo } = React;
 
-        // --- Icons ---
-        const Calendar = ({ size = 24, className = "" }) => (
-            <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
+        // --- Icon Components (Lucide React 대체용 SVG) ---
+        const IconBase = ({ children, size = 18, className = "" }) => (
+            <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>{children}</svg>
         );
-        const CheckCircle = ({ size = 24, className = "" }) => (
-            <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-        );
-        const Circle = ({ size = 24, className = "" }) => (
-            <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="12" cy="12" r="10"/></svg>
-        );
-        const Clock = ({ size = 24, className = "" }) => (
-            <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-        );
-        const FileText = ({ size = 24, className = "" }) => (
-            <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/><line x1="16" x2="8" y1="13" y2="13"/><line x1="16" x2="8" y1="17" y2="17"/><line x1="10" x2="8" y1="9" y2="9"/></svg>
-        );
-        const Save = ({ size = 24, className = "" }) => (
-            <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
-        );
-        const Flag = ({ size = 24, className = "" }) => (
-            <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" x2="4" y1="22" y2="15"/></svg>
-        );
+        const MapPin = (props) => <IconBase {...props}><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></IconBase>;
+        const Utensils = (props) => <IconBase {...props}><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"/><path d="M7 2v20"/><path d="M21 15V2v0a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7"/></IconBase>;
+        const ShoppingBag = (props) => <IconBase {...props}><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></IconBase>;
+        const Car = (props) => <IconBase {...props}><path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.4 2.9A3.7 3.7 0 0 0 2 12v4c0 .6.4 1 1 1h2"/><circle cx="7" cy="17" r="2"/><path d="M9 17h6"/><circle cx="17" cy="17" r="2"/></IconBase>;
+        const Plus = (props) => <IconBase {...props}><path d="M5 12h14"/><path d="M12 5v14"/></IconBase>;
+        const X = (props) => <IconBase {...props}><path d="M18 6 6 18"/><path d="m6 6 12 12"/></IconBase>;
+        const ExternalLink = (props) => <IconBase {...props}><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" x2="21" y1="14" y2="3"/></IconBase>;
+        const Edit2 = (props) => <IconBase {...props}><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></IconBase>;
+        const Tag = (props) => <IconBase {...props}><path d="M12 2H2v10l9.29 9.29c.94.94 2.48.94 3.42 0l6.58-6.58c.94-.94.94-2.48 0-3.42L12 2Z"/><path d="M7 7h.01"/></IconBase>;
+        const ChevronDown = (props) => <IconBase {...props}><path d="m6 9 6 6 6-6"/></IconBase>;
+        const ChevronUp = (props) => <IconBase {...props}><path d="m18 15-6-6-6 6"/></IconBase>;
+        const Calculator = (props) => <IconBase {...props}><rect width="16" height="20" x="4" y="2" rx="2"/><line x1="8" x2="16" y1="6" y2="6"/><line x1="16" x2="16" y1="14" y2="18"/><path d="M16 10h.01"/><path d="M12 10h.01"/><path d="M8 10h.01"/><path d="M12 14h.01"/><path d="M8 14h.01"/><path d="M12 18h.01"/><path d="M8 18h.01"/></IconBase>;
+        const ArrowRightLeft = (props) => <IconBase {...props}><path d="m16 3 4 4-4 4"/><path d="M20 7H4"/><path d="m8 21-4-4 4-4"/><path d="M4 17h16"/></IconBase>;
+        const Trash2 = (props) => <IconBase {...props}><path d="M3 6h18"/><path d="M19 6v14c0 1.1-.9 2-2 2H7c-1.1 0-2-.9-2-2V6"/><path d="M8 6V4c0-1.1.9-2 2-2h4c1.1 0 2 .9 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></IconBase>;
+        const Home = (props) => <IconBase {...props}><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></IconBase>;
+        const Coffee = (props) => <IconBase {...props}><path d="M17 8h1a4 4 0 1 1 0 8h-1"/><path d="M3 8h14v9a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4Z"/><line x1="6" x2="6" y1="2" y2="4"/><line x1="10" x2="10" y1="2" y2="4"/><line x1="14" x2="14" y1="2" y2="4"/></IconBase>;
 
         // --- Main Component ---
-        const ThesisScheduler = () => {
-            // [수정됨] 고정된 날짜 대신 현재 접속한 날짜를 가져옵니다.
-            const now = new Date();
-            const currentYear = now.getFullYear();
+        const BangkokPlanner = () => {
+            // State
+            const [activeTab, setActiveTab] = useState('itinerary'); 
+            const [selectedDayId, setSelectedDayId] = useState(1);
             
-            // 날짜 계산을 위해 시간은 00:00:00으로 초기화
-            const TODAY = new Date(currentYear, now.getMonth(), now.getDate());
-            
-            // [수정됨] 심사일도 현재 연도에 맞춰서 설정 (12월 17일)
-            // 월(Month)은 0부터 시작하므로 11이 12월입니다.
-            const DEFENSE_DATE = new Date(currentYear, 11, 17);
+            // Modals
+            const [isModalOpen, setIsModalOpen] = useState(false);
+            const [isConverterOpen, setIsConverterOpen] = useState(false);
+            const [deleteTarget, setDeleteTarget] = useState(null);
 
-            const defaultSchedule = [
-                {
-                    id: 1,
-                    phase: "실험 및 데이터 확정",
-                    dates: "11.21(금) - 11.22(토)",
-                    status: "current",
-                    tasks: [
-                        { id: 't1-1', text: "실험 최종 마무리 및 데이터 수집 완료", completed: false },
-                        { id: 't1-2', text: "Raw Data 백업 및 정리", completed: false }
-                    ]
+            const [editingEventId, setEditingEventId] = useState(null);
+            const [expandedCategory, setExpandedCategory] = useState(null); 
+            
+            // Converter
+            const [exchangeRate, setExchangeRate] = useState(38); 
+            const [convertValues, setConvertValues] = useState({ thb: '', krw: '' });
+
+            // Initial Data
+            const initialDays = [
+                { id: 1, date: "2/2 (월)", title: "방콕 도착 & 짜뚜짝 찬스", 
+                events: [
+                    { id: 101, type: 'transport', time: '13:45', title: '수완나품 공항 도착', note: '1층 퍼블릭 택시/그랩 승강장 이동', link: 'https://www.google.com/maps/search/?api=1&query=Suvarnabhumi+Airport' },
+                    { id: 102, type: 'transport', title: '공항 → 람부뜨리', cost: 500, note: 'Grab SUV 추천 (짐 고려)' },
+                    { id: 103, type: 'etc', time: '15:30', title: '람부뜨리 빌리지', note: '체크인 & 짐 풀기', link: 'https://www.google.com/maps/search/?api=1&query=Rambuttri+Village+Inn' },
+                    { id: 104, type: 'visit', time: '16:30', title: '짜뚜짝 주말 시장', note: 'GLN 결제 필수, 주말 한정', link: 'https://www.google.com/maps/search/?api=1&query=Chatuchak+Weekend+Market' },
+                    { id: 105, type: 'food', time: '19:00', title: '시장 내 로컬 푸드', note: '빠에야 아저씨네', cost: 300, menu: '해산물 빠에야, 땡모반' },
+                    { id: 106, type: 'visit', time: '21:00', title: '람부뜨리 로드', note: '발마사지 & 휴식', link: 'https://www.google.com/maps/search/?api=1&query=Soi+Ram+Buttri' }
+                ]
                 },
-                {
-                    id: 2,
-                    phase: "결과 분석 및 시각화 (뼈대 잡기)",
-                    dates: "11.23(일) - 11.26(수)",
-                    status: "upcoming",
-                    tasks: [
-                        { id: 't2-1', text: "데이터 통계 분석 및 해석", completed: false },
-                        { id: 't2-2', text: "[결과] 섹션용 표(Table) 및 그림(Figure) 제작", completed: false },
-                        { id: 't2-3', text: "논문 목차(Outline) 세부 확정", completed: false }
-                    ]
+                { id: 2, date: "2/3 (화)", title: "올드시티 & 왓 아룬", 
+                events: [
+                    { id: 201, type: 'food', time: '11:00', title: '쿤댕 꾸어이짭 유안', note: '끈적 국수', cost: 150, menu: '끈적국수, 스프링롤', link: 'https://www.google.com/maps/search/?api=1&query=Khun+Deng+Guay+Jub+Yuan' },
+                    { id: 202, type: 'visit', time: '13:00', title: '왓 아룬 (새벽 사원)', note: '수상버스 이동', link: 'https://www.google.com/maps/search/?api=1&query=Wat+Arun' },
+                    { id: 203, type: 'food', time: '15:00', title: '카페 뷰 아룬', note: '사원 뷰 에어컨 카페', cost: 200 },
+                    { id: 204, type: 'food', time: '18:00', title: '팁싸마이', note: '오렌지 주스 필수', cost: 400, link: 'https://www.google.com/maps/search/?api=1&query=Thipsamai' },
+                    { id: 205, type: 'visit', time: '20:00', title: '카오산 로드', note: 'I love Khaosan 맥날 앞', link: 'https://www.google.com/maps/search/?api=1&query=Khaosan+Road' }
+                ]
                 },
-                {
-                    id: 3,
-                    phase: "핵심 집필: 방법 & 결과",
-                    dates: "11.27(목) - 11.30(일)",
-                    status: "upcoming",
-                    tasks: [
-                        { id: 't3-1', text: "[연구 방법] 작성 (실험 설계, 측정 도구 등)", completed: false },
-                        { id: 't3-2', text: "[결과] 작성 (도표 해석 위주)", completed: false }
-                    ]
+                { id: 3, date: "2/4 (수)", title: "빈티지 차고 & 로컬", 
+                events: [
+                    { id: 301, type: 'transport', title: '숙소 → 랏프라오', cost: 300, note: '그랩 필수 (거리 멂)' },
+                    { id: 302, type: 'visit', time: '13:00', title: 'The Garage', note: '빈티지샵 구경', link: 'https://maps.app.goo.gl/p4jMDyHCmcJBQrxy6' },
+                    { id: 303, type: 'food', time: '15:00', title: '랏프라오 로컬 맛집', note: '근처 국수집', cost: 150 },
+                    { id: 304, type: 'visit', time: '17:00', title: '센트럴 랏프라오', note: '쇼핑몰 구경', link: 'https://www.google.com/maps/search/?api=1&query=Central+Plaza+Ladprao' },
+                    { id: 305, type: 'transport', title: '숙소 복귀', cost: 300 }
+                ]
                 },
-                {
-                    id: 4,
-                    phase: "핵심 집필: 서론 & 이론적 배경",
-                    dates: "12.01(월) - 12.04(목)",
-                    status: "upcoming",
-                    tasks: [
-                        { id: 't4-1', text: "[이론적 배경] 선행 연구 정리 및 인용", completed: false },
-                        { id: 't4-2', text: "[서론] 연구의 필요성 및 목적 기술", completed: false }
-                    ]
+                { id: 4, date: "2/5 (목)", title: "캠퍼스 투어 & 공원", 
+                events: [
+                    { id: 401, type: 'visit', time: '11:00', title: '쭐라롱깐 대학교', note: '캠퍼스 산책', link: 'https://www.google.com/maps/search/?api=1&query=Chulalongkorn+University' },
+                    { id: 402, type: 'food', time: '12:30', title: '삼얀 밋타운 푸드코트', note: '가성비 점심', cost: 200, link: 'https://www.google.com/maps/search/?api=1&query=Samyan+Mitrtown' },
+                    { id: 403, type: 'visit', time: '16:00', title: '벤자키티 공원', note: '해 질 녘 노을', link: 'https://www.google.com/maps/search/?api=1&query=Benchakitti+Park' },
+                    { id: 404, type: 'food', time: '19:00', title: '쩨오 쭐라', note: '마마 똠얌 라면', cost: 500, link: 'https://www.google.com/maps/search/?api=1&query=Jeh+O+Chula' }
+                ]
                 },
-                {
-                    id: 5,
-                    phase: "심화 집필: 논의 & 초록",
-                    dates: "12.05(금) - 12.08(월)",
-                    status: "upcoming",
-                    tasks: [
-                        { id: 't5-1', text: "[논의] 결과의 의의, 한계점, 제언 작성", completed: false },
-                        { id: 't5-2', text: "국문/영문 초록(Abstract) 작성", completed: false },
-                        { id: 't5-3', text: "참고문헌(References) 서식 정리", completed: false }
-                    ]
+                { id: 5, date: "2/6 (금)", title: "호텔 이동 & 시암", 
+                events: [
+                    { id: 501, type: 'etc', time: '11:00', title: '그랜드 센터 포인트', note: '랏차담리 체크인', link: 'https://www.google.com/maps/search/?api=1&query=Grande+Centre+Point+Ratchadamri' },
+                    { id: 502, type: 'food', time: '13:00', title: '솜분 씨푸드', note: '푸팟퐁커리', cost: 1200 },
+                    { id: 503, type: 'shop', time: '15:00', title: '시암 파라곤', note: '명품관/세포라', cost: 0, items: [], link: 'https://www.google.com/maps/search/?api=1&query=Siam+Paragon' },
+                    { id: 504, type: 'shop', time: '17:00', title: '이브앤보이', note: '태국 화장품', cost: 2000, items: ['폰즈 파우더', 'SRICHAND', '4U2 블러셔'] },
+                    { id: 505, type: 'etc', time: '20:00', title: '호텔 수영장', note: '휴식' }
+                ]
                 },
-                {
-                    id: 6,
-                    phase: "최종 편집 (작성 완료 목표)",
-                    dates: "12.09(화) - 12.10(수)",
-                    status: "upcoming",
-                    isTarget: true,
-                    tasks: [
-                        { id: 't6-1', text: "전체 논리 흐름 검토 및 오타 수정", completed: false },
-                        { id: 't6-2', text: "지도교수님 최종 확인 요청", completed: false },
-                        { id: 't6-3', text: "★ 심사일 1주일 전 작성 완료 달성", completed: false }
-                    ]
+                { id: 6, date: "2/7 (토)", title: "빅씨 쇼핑 데이", 
+                events: [
+                    { id: 601, type: 'food', time: '11:30', title: '센트럴 월드', note: '점심 식사', cost: 800 },
+                    { id: 602, type: 'shop', time: '14:00', title: '빅씨 마켓 랏차담리', note: '기념품 쇼핑', cost: 3000, items: ['쿤나 망고', '왕실 꿀', '선실크', '차트라뮤'], link: 'https://www.google.com/maps/search/?api=1&query=Big+C+Supercenter+Ratchadamri' },
+                    { id: 603, type: 'transport', title: '짐 두러 호텔', note: '도보/툭툭' },
+                    { id: 604, type: 'food', time: '18:00', title: '고앙 빠뚜남', note: '핑크 카오만가이', cost: 100, link: 'https://www.google.com/maps/search/?api=1&query=Go-Ang+Pratunam+Chicken+Rice' },
+                    { id: 605, type: 'visit', time: '20:00', title: '티츄카 루프탑', note: '야경', cost: 1000, link: 'https://www.google.com/maps/search/?api=1&query=Tichuca+Rooftop+Bar' }
+                ]
                 },
-                {
-                    id: 7,
-                    phase: "행정 처리 및 실적 제출",
-                    dates: "12.11(목) - 12.12(금)",
-                    status: "upcoming",
-                    isDeadline: true,
-                    tasks: [
-                        { id: 't7-1', text: "논문 가제본/파일 준비", completed: false },
-                        { id: 't7-2', text: "★ 12일: 논문실적 제출 마감 준수", completed: false }
-                    ]
+                { id: 7, date: "2/8 (일)", title: "룸피니 & 릴렉스", 
+                events: [
+                    { id: 701, type: 'visit', time: '10:00', title: '룸피니 공원', note: '오리배', link: 'https://www.google.com/maps/search/?api=1&query=Lumphini+Park' },
+                    { id: 702, type: 'food', time: '12:30', title: '노스이스트', note: '한국인 맛집', cost: 900, link: 'https://www.google.com/maps/search/?api=1&query=Northeast+Restaurant+Bangkok' },
+                    { id: 703, type: 'etc', time: '15:00', title: '디바나 스파', note: '마사지', cost: 1500 },
+                    { id: 704, type: 'shop', time: '18:00', title: '아이콘 시암', note: '분수쇼 & 야경', cost: 0, link: 'https://www.google.com/maps/search/?api=1&query=ICONSIAM' }
+                ]
                 },
-                {
-                    id: 8,
-                    phase: "발표 자료 준비",
-                    dates: "12.13(토) - 12.16(화)",
-                    status: "upcoming",
-                    tasks: [
-                        { id: 't8-1', text: "심사 발표용 PPT 제작", completed: false },
-                        { id: 't8-2', text: "발표 대본 작성 및 리허설", completed: false },
-                        { id: 't8-3', text: "예상 질문 리스트업 및 답변 준비", completed: false }
-                    ]
-                },
-                {
-                    id: 9,
-                    phase: "D-Day: 논문 심사",
-                    dates: "12.17(수)",
-                    status: "upcoming",
-                    isDday: true,
-                    tasks: [
-                        { id: 't9-1', text: "최종 발표 및 심사위원 질의응답", completed: false },
-                        { id: 't9-2', text: "심사 후 수정사항 정리", completed: false }
-                    ]
+                { id: 8, date: "2/9 (월)", title: "굿바이 방콕", 
+                events: [
+                    { id: 801, type: 'etc', time: '12:00', title: '체크아웃', note: '짐 보관' },
+                    { id: 802, type: 'food', time: '13:00', title: '마지막 로컬 식사', note: '맛집 탐방' },
+                    { id: 803, type: 'food', time: '15:00', title: '랑수언 로드 카페', note: '스타벅스 등' },
+                    { id: 804, type: 'transport', time: '21:00', title: '공항 이동', note: '21:30 도착 목표' },
+                    { id: 805, type: 'transport', time: '00:55', title: '인천행 출발', note: '2/10(월) 아침 도착' }
+                ]
                 }
             ];
 
-            const [schedule, setSchedule] = useState(() => {
-                const saved = localStorage.getItem('defenseRoadmapData');
-                return saved ? JSON.parse(saved) : defaultSchedule;
+            const [days, setDays] = useState(() => {
+                const saved = localStorage.getItem('bangkokTripDataFinalV5');
+                return saved ? JSON.parse(saved) : initialDays;
             });
-            const [progress, setProgress] = useState(0);
 
             useEffect(() => {
-                localStorage.setItem('defenseRoadmapData', JSON.stringify(schedule));
-            }, [schedule]);
+                localStorage.setItem('bangkokTripDataFinalV5', JSON.stringify(days));
+            }, [days]);
 
-            useEffect(() => {
-                let totalTasks = 0;
-                let completedTasks = 0;
-                schedule.forEach(phase => {
-                    phase.tasks.forEach(task => {
-                        totalTasks++;
-                        if (task.completed) completedTasks++;
-                    });
+            const [newEntry, setNewEntry] = useState({
+                type: 'food', title: '', time: '', cost: '', currency: 'THB', note: '', link: '', items: '',
+            });
+
+            // Converter Handlers
+            const handleThbChange = (e) => {
+                const val = e.target.value;
+                setConvertValues({ thb: val, krw: val ? Math.round(Number(val) * exchangeRate) : '' });
+            };
+            const handleKrwChange = (e) => {
+                const val = e.target.value;
+                setConvertValues({ thb: val ? (Number(val) / exchangeRate).toFixed(2) : '', krw: val });
+            };
+
+            // Modal Handlers
+            const openAddModal = () => {
+                setNewEntry({ type: 'food', title: '', time: '', cost: '', currency: 'THB', note: '', link: '', items: '' });
+                setEditingEventId(null);
+                setIsModalOpen(true);
+            };
+
+            const openEditModal = (event) => {
+                let mappedType = event.type;
+                if (!['food', 'visit', 'shop', 'transport', 'etc'].includes(mappedType)) {
+                    if (['flight', 'taxi'].includes(mappedType)) mappedType = 'transport';
+                    else if (['coffee', 'dessert'].includes(mappedType)) mappedType = 'food';
+                    else if (['checkin', 'massage'].includes(mappedType)) mappedType = 'etc';
+                    else mappedType = 'visit';
+                }
+                setNewEntry({
+                    type: mappedType,
+                    title: event.title,
+                    time: event.time || '',
+                    cost: event.cost || '',
+                    currency: 'THB',
+                    note: event.note || '',
+                    link: event.link || '',
+                    items: event.type === 'shop' && event.items ? event.items.join(', ') : (event.menu || ''),
                 });
-                setProgress(Math.round((completedTasks / totalTasks) * 100));
-            }, [schedule]);
-
-            const toggleTask = (phaseId, taskId) => {
-                setSchedule(prevSchedule => prevSchedule.map(phase => {
-                    if (phase.id === phaseId) {
-                        return {
-                            ...phase,
-                            tasks: phase.tasks.map(task => 
-                                task.id === taskId ? { ...task, completed: !task.completed } : task
-                            )
-                        };
-                    }
-                    return phase;
-                }));
+                setEditingEventId(event.id);
+                setIsModalOpen(true);
             };
 
-            const calculateDday = () => {
-                const diffTime = DEFENSE_DATE - TODAY;
-                const days = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-                
-                if (days === 0) return "D-Day";
-                if (days < 0) return `D+${Math.abs(days)}`;
-                return `D-${days}`;
+            const handleSaveEntry = () => {
+                if (!newEntry.title) return;
+                const processedItems = (newEntry.type === 'shop' || newEntry.type === 'food') && newEntry.items ? newEntry.items.split(',').map(i => i.trim()) : [];
+                const eventData = {
+                    type: newEntry.type,
+                    title: newEntry.title,
+                    time: newEntry.time,
+                    cost: newEntry.cost ? Number(newEntry.cost) : 0,
+                    note: newEntry.note,
+                    link: newEntry.link,
+                    items: newEntry.type === 'shop' ? processedItems : [],
+                    menu: newEntry.type === 'food' ? newEntry.items : undefined
+                };
+
+                if (editingEventId) {
+                    setDays(prev => prev.map(d => d.id === selectedDayId ? { ...d, events: d.events.map(ev => ev.id === editingEventId ? { ...ev, ...eventData } : ev).sort((a, b) => (a.time || '').localeCompare(b.time || '')) } : d));
+                } else {
+                    setDays(prev => prev.map(d => d.id === selectedDayId ? { ...d, events: [...d.events, { id: Date.now(), ...eventData }].sort((a, b) => (a.time || '').localeCompare(b.time || '')) } : d));
+                }
+                setIsModalOpen(false);
             };
 
-            const resetData = () => {
-                if (confirm("모든 체크리스트 기록을 초기화하시겠습니까?")) {
-                    setSchedule(defaultSchedule);
+            const initiateDelete = (dayId, eventId, e) => {
+                e.stopPropagation();
+                setDeleteTarget({ dayId, eventId });
+            };
+            const confirmDelete = () => {
+                if (!deleteTarget) return;
+                setDays(prev => prev.map(d => d.id === deleteTarget.dayId ? { ...d, events: d.events.filter(ev => ev.id !== deleteTarget.eventId) } : d));
+                setDeleteTarget(null);
+            };
+            const cancelDelete = () => setDeleteTarget(null);
+            const toggleCategory = (cat) => setExpandedCategory(expandedCategory === cat ? null : cat);
+
+            // Styling
+            const colors = {
+                bg: "bg-[#FDFCF8]",
+                card: "bg-white",
+                blue: { bg: "bg-sky-100", text: "text-sky-600", border: "border-sky-200" }, 
+                green: { bg: "bg-lime-100", text: "text-lime-700", border: "border-lime-200" }, 
+                purple: { bg: "bg-purple-100", text: "text-purple-600", border: "border-purple-200" }, 
+                orange: { bg: "bg-orange-50", text: "text-orange-600", border: "border-orange-100" }, 
+                pink: { bg: "bg-rose-50", text: "text-rose-500", border: "border-rose-100" }, 
+            };
+
+            const getCategoryColor = (type) => {
+                switch (type) {
+                    case 'shop': return colors.purple;
+                    case 'transport': return colors.blue;
+                    case 'food': return colors.orange;
+                    case 'etc': return colors.pink;
+                    default: return colors.green;
                 }
             };
 
+            const getIcon = (type) => {
+                const className = `w-5 h-5 ${getCategoryColor(type).text}`;
+                switch (type) {
+                    case 'food': return <Utensils className={className} />;
+                    case 'shop': return <ShoppingBag className={className} />;
+                    case 'transport': return <Car className={className} />;
+                    case 'etc': return <Home className={className} />;
+                    default: return <MapPin className={className} />;
+                }
+            };
+
+            const currentDay = days.find(d => d.id === selectedDayId);
+            const stats = useMemo(() => days.reduce((acc, d) => acc + d.events.reduce((s, e) => s + (e.cost || 0), 0), 0), [days]);
+            const expensesByCategory = useMemo(() => {
+                const cats = {
+                    shop: { label: '쇼핑 (Shopping)', total: 0, items: [], color: colors.purple },
+                    food: { label: '식비 (Food)', total: 0, items: [], color: colors.orange },
+                    transport: { label: '교통 (Transport)', total: 0, items: [], color: colors.blue },
+                    others: { label: '숙소/기타 (Others)', total: 0, items: [], color: colors.pink }
+                };
+                days.forEach(day => day.events.forEach(event => {
+                    if (event.cost > 0) {
+                        let target = cats.others;
+                        if (event.type === 'shop') target = cats.shop;
+                        else if (event.type === 'food') target = cats.food;
+                        else if (event.type === 'transport') target = cats.transport;
+                        else if (['etc', 'checkin', 'visit'].includes(event.type)) target = cats.others;
+                        if (event.type === 'visit') target = cats.others; 
+                        target.total += event.cost;
+                        target.items.push({ ...event, date: day.date });
+                    }
+                }));
+                return cats;
+            }, [days]);
+
             return (
-                <div className="min-h-screen bg-gray-50 p-4 md:p-8 font-sans text-slate-800 pb-20">
-                    <div className="max-w-3xl mx-auto space-y-8">
-                        
-                        {/* Header */}
-                        <header className="bg-slate-900 rounded-3xl shadow-xl p-8 text-white relative overflow-hidden">
-                            <div className="absolute -top-10 -right-10 w-40 h-40 bg-violet-500 rounded-full blur-3xl opacity-20"></div>
-                            <div className="absolute bottom-0 left-0 w-32 h-32 bg-lime-400 rounded-full blur-3xl opacity-10"></div>
-
-                            <div className="relative z-10 flex justify-between items-start md:items-center flex-col md:flex-row gap-6">
-                                <div>
-                                    <h1 className="text-3xl md:text-4xl font-extrabold mb-2 tracking-tight">
-                                        Defense Roadmap
-                                    </h1>
-                                    <p className="text-slate-300 flex items-center gap-2 text-sm font-medium">
-                                        <Calendar size={16} className="text-lime-400" />
-                                        11.21 ~ 12.17 논문 심사 완주 프로젝트
-                                    </p>
-                                </div>
-                                <div className="flex flex-col items-end">
-                                    <div className="bg-lime-400 px-5 py-2 rounded-full text-slate-900 font-black text-xl shadow-lg transform hover:scale-105 transition-transform">
-                                        {calculateDday()}
-                                    </div>
-                                    <span className="text-xs text-slate-400 mt-2 font-medium tracking-wider">FINAL DEFENSE</span>
-                                </div>
-                            </div>
-
-                            <div className="mt-8 relative z-10">
-                                <div className="flex justify-between text-xs font-bold mb-2 text-lime-400 tracking-widest uppercase">
-                                    <span>Progress</span>
-                                    <span>{progress}%</span>
-                                </div>
-                                <div className="w-full bg-slate-800 rounded-full h-2 overflow-hidden">
-                                    <div 
-                                        className="bg-lime-400 h-2 rounded-full shadow-[0_0_10px_rgba(163,230,53,0.5)] transition-all duration-700 ease-out"
-                                        style={{ width: `${progress}%` }}
-                                    ></div>
-                                </div>
-                            </div>
-                        </header>
-
-                        {/* Dashboard */}
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                            <div className="bg-blue-50 p-5 rounded-2xl border border-blue-100 flex flex-col justify-between hover:shadow-md transition-shadow">
-                                <div className="flex justify-between items-start mb-2">
-                                    <div className="p-2 bg-white text-blue-500 rounded-xl shadow-sm"><FileText size={20} /></div>
-                                    <span className="text-xs font-bold text-blue-400 uppercase tracking-wider">Goal 1</span>
-                                </div>
-                                <div>
-                                    <div className="text-2xl font-bold text-slate-800">작성 완료</div>
-                                    <div className="text-sm font-medium text-blue-600 mt-1">12월 10일 (수)</div>
-                                </div>
-                            </div>
-                            <div className="bg-violet-50 p-5 rounded-2xl border border-violet-100 flex flex-col justify-between hover:shadow-md transition-shadow">
-                                <div className="flex justify-between items-start mb-2">
-                                    <div className="p-2 bg-white text-violet-500 rounded-xl shadow-sm"><Save size={20} /></div>
-                                    <span className="text-xs font-bold text-violet-400 uppercase tracking-wider">Deadline</span>
-                                </div>
-                                <div>
-                                    <div className="text-2xl font-bold text-slate-800">실적 제출</div>
-                                    <div className="text-sm font-medium text-violet-600 mt-1">12월 12일 (금)</div>
-                                </div>
-                            </div>
-                            <div className="bg-slate-900 p-5 rounded-2xl border border-slate-800 flex flex-col justify-between shadow-lg hover:shadow-xl transition-shadow">
-                                <div className="flex justify-between items-start mb-2">
-                                    <div className="p-2 bg-slate-800 text-lime-400 rounded-xl"><Flag size={20} /></div>
-                                    <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">The Day</span>
-                                </div>
-                                <div>
-                                    <div className="text-2xl font-bold text-white">논문 심사</div>
-                                    <div className="text-sm font-medium text-lime-400 mt-1">12월 17일 (수)</div>
+                <div className={`max-w-md mx-auto h-screen ${colors.bg} flex flex-col font-sans text-slate-700`}>
+                    {/* Header */}
+                    <header className="px-4 pt-6 pb-2 bg-white/90 backdrop-blur-md sticky top-0 z-30 border-b border-stone-100 shadow-sm">
+                        <div className="flex justify-between items-center mb-3">
+                            <h1 className="text-xl font-bold text-stone-800 tracking-tight">Bangkok Trip 🥥</h1>
+                            <div className="flex items-center gap-3">
+                                <button onClick={() => setIsConverterOpen(true)} className="p-2 bg-stone-100 rounded-full text-stone-600 hover:bg-stone-200 transition-colors" title="환율 계산기"><Calculator size={18} /></button>
+                                <div className="text-right">
+                                    <span className="text-[10px] font-bold text-stone-400 block uppercase tracking-wider">Total</span>
+                                    <span className="text-lg font-bold text-stone-700 leading-none">{stats.toLocaleString()} B</span>
                                 </div>
                             </div>
                         </div>
+                        <div className="flex p-1 bg-stone-100 rounded-xl">
+                            <button onClick={() => setActiveTab('itinerary')} className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all ${activeTab === 'itinerary' ? 'bg-white text-stone-800 shadow-sm' : 'text-stone-400'}`}>여행 일정</button>
+                            <button onClick={() => setActiveTab('shopping')} className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all ${activeTab === 'shopping' ? 'bg-white text-purple-600 shadow-sm' : 'text-stone-400'}`}>카테고리별 지출</button>
+                        </div>
+                    </header>
 
-                        {/* Timeline */}
-                        <div className="space-y-4">
-                            {schedule.map((phase) => {
-                                let containerClass = "bg-white rounded-2xl p-6 shadow-sm border border-slate-100 transition-all hover:shadow-md";
-                                let dateBadgeClass = "bg-slate-50 text-slate-500";
-                                let titleClass = "text-lg font-bold text-slate-800";
-                                let checkColor = "text-lime-500";
-                                
-                                if (phase.isTarget) {
-                                    containerClass = "bg-blue-50/60 rounded-2xl p-6 border-2 border-blue-100 shadow-sm";
-                                    dateBadgeClass = "bg-white text-blue-600 font-bold shadow-sm";
-                                    titleClass = "text-lg font-extrabold text-blue-900";
-                                    checkColor = "text-blue-500";
-                                } else if (phase.isDeadline) {
-                                    containerClass = "bg-violet-50/60 rounded-2xl p-6 border-2 border-violet-100 shadow-sm";
-                                    dateBadgeClass = "bg-white text-violet-600 font-bold shadow-sm";
-                                    titleClass = "text-lg font-extrabold text-violet-900";
-                                    checkColor = "text-violet-500";
-                                } else if (phase.isDday) {
-                                    containerClass = "bg-slate-900 rounded-2xl p-6 shadow-xl border border-slate-800 relative overflow-hidden";
-                                    dateBadgeClass = "bg-slate-800 text-lime-400 font-bold border border-slate-700";
-                                    titleClass = "text-lg font-extrabold text-white";
-                                    checkColor = "text-lime-400";
-                                }
-
-                                return (
-                                    <div key={phase.id} className={containerClass}>
-                                        {phase.isDday && <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-bl from-lime-500/20 to-transparent rounded-bl-full pointer-events-none"></div>}
-                                        
-                                        <div className="flex flex-col md:flex-row md:items-center justify-between mb-5 gap-3 relative z-10">
-                                            <div className="flex items-center gap-4">
-                                                <div className={`flex flex-col items-center justify-center w-14 h-14 rounded-2xl shrink-0 text-xs leading-tight ${dateBadgeClass}`}>
-                                                    <span className="text-sm font-bold">{phase.dates.split('.')[0]}월</span>
-                                                    <span>{phase.dates.split('(')[0].split('.')[1]}일</span>
-                                                </div>
-                                                <div>
-                                                    <h3 className={titleClass}>{phase.phase}</h3>
-                                                    <p className={`text-sm flex items-center gap-1 mt-1 font-medium ${phase.isDday ? 'text-slate-400' : 'text-slate-500'}`}>
-                                                        <Clock size={14} /> {phase.dates}
-                                                    </p>
-                                                </div>
-                                            </div>
+                    {/* Content */}
+                    <div className="flex-1 overflow-hidden relative">
+                        {activeTab === 'itinerary' && (
+                            <div className="h-full flex flex-col">
+                                <div className="overflow-x-auto whitespace-nowrap px-4 py-3 shrink-0 scrollbar-hide bg-white/50">
+                                    <div className="flex space-x-2">
+                                        {days.map(day => (
+                                            <button key={day.id} onClick={() => setSelectedDayId(day.id)} className={`flex flex-col items-center justify-center min-w-[56px] h-[56px] rounded-xl transition-all border ${selectedDayId === day.id ? 'bg-lime-100 border-lime-300 text-lime-800 shadow-sm scale-105' : 'bg-white border-stone-100 text-stone-400'}`}>
+                                                <span className="text-[10px] font-bold uppercase">{day.date.split(' ')[1].replace(/[()]/g, '')}</span>
+                                                <span className="text-sm font-bold">{day.date.split(' ')[0].split('/')[1]}</span>
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+                                <div className="flex-1 overflow-y-auto px-4 pb-24">
+                                    <div className="bg-stone-800 text-white p-4 rounded-2xl mb-5 flex justify-between items-center shadow-lg shadow-stone-200 mt-2">
+                                        <div><span className="text-lime-400 font-bold text-[10px] tracking-wider uppercase mb-1 block">Travel Log</span><h2 className="text-lg font-bold">{currentDay.date}</h2></div>
+                                        <div className="flex items-center gap-3">
+                                            <div className="text-right"><span className="block text-[10px] text-stone-400 font-medium tracking-wider">DAY</span><span className="block text-2xl font-black leading-none">{currentDay.id}</span></div>
+                                            <div className="h-8 w-[1px] bg-stone-600"></div>
+                                            <div className="bg-white/10 backdrop-blur-md px-3 py-1.5 rounded-lg border border-white/10"><span className="font-bold text-sm">D+{currentDay.id}</span></div>
                                         </div>
-
-                                        <div className="space-y-2.5 pl-0 md:pl-[4.5rem] relative z-10">
-                                            {phase.tasks.map(task => (
-                                                <button
-                                                    key={task.id}
-                                                    onClick={() => toggleTask(phase.id, task.id)}
-                                                    className={`w-full flex items-start gap-3 p-3 rounded-xl text-left group transition-all duration-200 ${
-                                                        phase.isDday 
-                                                        ? 'hover:bg-slate-800/80' 
-                                                        : 'hover:bg-white hover:shadow-sm hover:ring-1 hover:ring-slate-100'
-                                                    } ${phase.isDday && task.completed ? 'opacity-50' : ''}`}
-                                                >
-                                                    <div className={`mt-0.5 shrink-0 transition-colors ${
-                                                        task.completed ? checkColor : (phase.isDday ? 'text-slate-600' : 'text-slate-300')
-                                                    }`}>
-                                                        {task.completed ? <CheckCircle size={22} className="fill-current" /> : <Circle size={22} />}
+                                    </div>
+                                    <div className="space-y-4">
+                                        {currentDay.events.map((event, index) => {
+                                            const style = getCategoryColor(event.type);
+                                            return (
+                                                <div key={event.id} className="relative pl-3">
+                                                    {index !== currentDay.events.length - 1 && <div className="absolute left-[22px] top-10 bottom-[-24px] w-[2px] bg-stone-100"></div>}
+                                                    <div className="flex gap-3">
+                                                        <div className={`shrink-0 w-10 h-10 rounded-full ${style.bg} flex items-center justify-center border-2 border-white shadow-sm z-10`}>{getIcon(event.type)}</div>
+                                                        <div className={`flex-1 bg-white p-4 rounded-2xl border ${style.border} shadow-sm relative group`}>
+                                                            <div className="absolute top-3 right-3 flex gap-2 z-20">
+                                                                <button onClick={(e) => { e.stopPropagation(); openEditModal(event); }} className="p-1.5 bg-stone-50 rounded-full text-stone-400 hover:text-sky-500 hover:bg-sky-50 transition-colors cursor-pointer"><Edit2 size={12}/></button>
+                                                                <button onClick={(e) => initiateDelete(currentDay.id, event.id, e)} className="p-1.5 bg-stone-50 rounded-full text-stone-400 hover:text-red-500 hover:bg-red-50 transition-colors cursor-pointer"><Trash2 size={12}/></button>
+                                                            </div>
+                                                            <div className="flex items-center gap-2 mb-1 pr-14">
+                                                                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md ${style.bg} ${style.text}`}>{event.time || 'Time'}</span>
+                                                                {event.link && <a href={event.link} target="_blank" rel="noreferrer" className="text-stone-300 hover:text-sky-500"><ExternalLink size={12} /></a>}
+                                                            </div>
+                                                            <h3 className="font-bold text-stone-700 pr-2 text-sm">{event.title}</h3>
+                                                            {event.note && <p className="text-xs text-stone-400 mt-1">{event.note}</p>}
+                                                            {(event.cost > 0 || event.menu || (event.items && event.items.length > 0)) && (
+                                                                <div className="mt-3 pt-3 border-t border-stone-50 flex flex-wrap gap-2">
+                                                                    {event.cost > 0 && <div className="text-xs font-bold text-stone-600 bg-stone-100 px-2 py-1 rounded">-{event.cost.toLocaleString()} B</div>}
+                                                                    {event.menu && <div className="text-xs text-orange-600 bg-orange-50 px-2 py-1 rounded border border-orange-100">{event.menu}</div>}
+                                                                    {event.items && event.items.map((item, i) => <div key={i} className="text-xs text-purple-600 bg-purple-50 px-2 py-1 rounded border border-purple-100">{item}</div>)}
+                                                                </div>
+                                                            )}
+                                                        </div>
                                                     </div>
-                                                    <span className={`text-sm md:text-[15px] transition-all leading-relaxed font-medium ${
-                                                        task.completed 
-                                                        ? (phase.isDday ? 'text-slate-500 line-through' : 'text-slate-400 line-through') 
-                                                        : (phase.isDday ? 'text-slate-200' : 'text-slate-700')
-                                                    }`}>
-                                                        {task.text}
-                                                    </span>
-                                                </button>
-                                            ))}
-                                        </div>
+                                                </div>
+                                            );
+                                        })}
                                     </div>
-                                );
-                            })}
-                        </div>
-
-                        <footer className="text-center py-8 space-y-4">
-                            <p className="text-slate-400 text-sm font-medium">
-                                "끝날 때까지 끝난 게 아니다" — 심사 통과를 기원합니다 🙏
-                            </p>
-                            <button onClick={resetData} className="text-xs text-slate-300 underline hover:text-slate-500">
-                                기록 초기화
-                            </button>
-                        </footer>
+                                    <button onClick={openAddModal} className="mt-6 w-full py-3.5 rounded-xl border-2 border-dashed border-stone-300 text-stone-400 font-bold text-sm hover:border-lime-400 hover:text-lime-600 hover:bg-lime-50 transition-all flex items-center justify-center gap-2"><Plus size={16} /> 일정 추가하기</button>
+                                </div>
+                            </div>
+                        )}
+                        {activeTab === 'shopping' && (
+                            <div className="h-full overflow-y-auto px-4 py-4 pb-24">
+                                <div className="bg-gradient-to-br from-violet-100 to-white p-5 rounded-3xl shadow-sm border border-violet-100 mb-5">
+                                    <div className="flex items-center gap-3 mb-2"><div className="p-2 bg-white rounded-full text-purple-500 shadow-sm"><Tag size={18}/></div><h3 className="text-sm font-bold text-purple-900">카테고리별 지출 요약</h3></div>
+                                    <div className="flex items-baseline gap-1 mt-1"><span className="text-3xl font-bold text-purple-600">{stats.toLocaleString()}</span><span className="text-sm font-bold text-purple-400">THB</span></div>
+                                    <p className="text-xs text-stone-400 mt-1">한화 약 {(stats * exchangeRate).toLocaleString()}원 (환율 {exchangeRate}원 기준)</p>
+                                </div>
+                                <div className="space-y-3">
+                                    {['shop', 'food', 'transport', 'others'].map(catKey => {
+                                        const category = expensesByCategory[catKey];
+                                        if (category.total === 0) return null;
+                                        return (
+                                            <div key={catKey} className="bg-white rounded-2xl shadow-sm border border-stone-100 overflow-hidden">
+                                                <button onClick={() => toggleCategory(catKey)} className="w-full flex justify-between items-center p-4 bg-white hover:bg-stone-50 transition-colors">
+                                                    <div className="flex items-center gap-3">
+                                                        <div className={`w-10 h-10 rounded-full flex items-center justify-center ${category.color.bg} ${category.color.text}`}>
+                                                            {catKey === 'shop' && <ShoppingBag size={18} />}{catKey === 'food' && <Utensils size={18} />}{catKey === 'transport' && <Car size={18} />}{catKey === 'others' && <Home size={18} />}
+                                                        </div>
+                                                        <div className="text-left"><h4 className="font-bold text-stone-700 text-sm">{category.label}</h4><p className="text-xs text-stone-400">{category.items.length}건</p></div>
+                                                    </div>
+                                                    <div className="flex items-center gap-2"><span className="font-bold text-stone-700 text-sm">{category.total.toLocaleString()} B</span>{expandedCategory === catKey ? <ChevronUp size={16} className="text-stone-300"/> : <ChevronDown size={16} className="text-stone-300"/>}</div>
+                                                </button>
+                                                {expandedCategory === catKey && (
+                                                    <div className="bg-stone-50 p-4 border-t border-stone-100 space-y-3">
+                                                        {category.items.map((item, idx) => (
+                                                            <div key={idx} className="flex justify-between items-start text-sm">
+                                                                <div className="flex-1 pr-4">
+                                                                    <div className="flex items-center gap-2"><span className="text-[10px] font-bold text-stone-400 bg-white px-1.5 rounded border border-stone-200">{item.date.split(' ')[0]}</span><span className="font-medium text-stone-700">{item.title}</span></div>
+                                                                    {(item.items?.length > 0 || item.menu) && <p className="text-xs text-stone-400 mt-1 pl-1 border-l-2 border-stone-200">{item.menu || item.items.join(', ')}</p>}
+                                                                </div>
+                                                                <span className="font-bold text-stone-600 shrink-0">{item.cost.toLocaleString()}</span>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+                        )}
                     </div>
+
+                    {/* Modals */}
+                    {isModalOpen && (
+                        <div className="absolute inset-0 z-50 flex items-end sm:items-center justify-center bg-black/40 backdrop-blur-[2px]">
+                            <div className="bg-white w-full max-w-md p-6 rounded-t-3xl sm:rounded-3xl shadow-xl animate-in slide-in-from-bottom-10 duration-300">
+                                <div className="flex justify-between items-center mb-6"><h3 className="font-bold text-lg text-stone-800">{editingEventId ? '일정 수정' : '새로운 일정'}</h3><button onClick={() => setIsModalOpen(false)} className="p-2 bg-stone-100 rounded-full text-stone-500"><X size={18}/></button></div>
+                                <div className="space-y-4">
+                                    <div className="grid grid-cols-5 gap-2">{['food','visit','shop','transport','etc'].map(type => (
+                                        <button key={type} onClick={() => setNewEntry({...newEntry, type})} className={`py-2.5 rounded-xl text-xs font-bold transition-all border ${newEntry.type === type ? 'bg-stone-800 text-white border-stone-800 shadow-md' : 'bg-white text-stone-400 border-stone-100 hover:bg-stone-50'}`}>{type === 'food' ? '식사/카페' : type === 'visit' ? '관광' : type === 'shop' ? '쇼핑' : type === 'transport' ? '이동' : '숙소/기타'}</button>
+                                    ))}</div>
+                                    <div className="space-y-1"><label className="text-[10px] font-bold text-stone-400 uppercase">Title</label><input className="w-full bg-stone-50 p-3 rounded-xl text-sm font-medium outline-none focus:ring-2 focus:ring-lime-200" placeholder="장소명 입력" value={newEntry.title} onChange={e => setNewEntry({...newEntry, title: e.target.value})}/></div>
+                                    <div className="flex gap-3">
+                                        <div className="flex-1 space-y-1"><label className="text-[10px] font-bold text-stone-400 uppercase">Time</label><input type="time" className="w-full bg-stone-50 p-3 rounded-xl text-sm outline-none focus:ring-2 focus:ring-lime-200" value={newEntry.time} onChange={e => setNewEntry({...newEntry, time: e.target.value})}/></div>
+                                        <div className="flex-1 space-y-1"><label className="text-[10px] font-bold text-stone-400 uppercase">Cost (THB)</label><input type="number" className="w-full bg-stone-50 p-3 rounded-xl text-sm outline-none focus:ring-2 focus:ring-lime-200" placeholder="0" value={newEntry.cost} onChange={e => setNewEntry({...newEntry, cost: e.target.value})}/></div>
+                                    </div>
+                                    {(newEntry.type === 'shop' || newEntry.type === 'food') && <div className="space-y-1"><label className="text-[10px] font-bold text-stone-400 uppercase">{newEntry.type === 'shop' ? 'Items' : 'Menu'}</label><input className="w-full bg-stone-50 p-3 rounded-xl text-sm outline-none focus:ring-2 focus:ring-lime-200" placeholder="콤마(,)로 구분" value={newEntry.items} onChange={e => setNewEntry({...newEntry, items: e.target.value})}/></div>}
+                                    <div className="space-y-1"><label className="text-[10px] font-bold text-stone-400 uppercase">Google Map Link</label><input className="w-full bg-stone-50 p-3 rounded-xl text-sm outline-none focus:ring-2 focus:ring-lime-200" placeholder="선택사항" value={newEntry.link} onChange={e => setNewEntry({...newEntry, link: e.target.value})}/></div>
+                                    <div className="space-y-1"><label className="text-[10px] font-bold text-stone-400 uppercase">Memo</label><textarea className="w-full bg-stone-50 p-3 rounded-xl text-sm outline-none focus:ring-2 focus:ring-lime-200 resize-none h-20" placeholder="간단한 메모를 남겨주세요" value={newEntry.note} onChange={e => setNewEntry({...newEntry, note: e.target.value})}/></div>
+                                    <button onClick={handleSaveEntry} className="w-full bg-lime-400 text-lime-900 py-4 rounded-xl font-bold shadow-lg shadow-lime-200 hover:bg-lime-500 hover:text-white transition-all">저장하기</button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                    {isConverterOpen && (
+                        <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-[2px]">
+                            <div className="bg-white w-full max-w-xs p-6 rounded-3xl shadow-xl transform transition-all scale-100">
+                                <div className="flex justify-between items-center mb-6"><h3 className="font-bold text-lg text-stone-800 flex items-center gap-2"><Calculator size={18} className="text-purple-500"/> 환율 계산기</h3><button onClick={() => setIsConverterOpen(false)} className="p-2 bg-stone-100 rounded-full text-stone-500"><X size={16}/></button></div>
+                                <div className="bg-stone-50 p-4 rounded-2xl mb-4"><div className="flex justify-between text-xs font-bold text-stone-400 mb-2 uppercase tracking-wider"><span>Rate Setting</span><span>1 THB = {exchangeRate} KRW</span></div><input type="range" min="35" max="45" step="0.5" value={exchangeRate} onChange={(e) => setExchangeRate(Number(e.target.value))} className="w-full accent-purple-500"/></div>
+                                <div className="space-y-4">
+                                    <div className="relative"><label className="text-[10px] font-bold text-stone-400 absolute top-2 left-3">THB (바트)</label><input type="number" className="w-full bg-white border border-stone-200 p-3 pt-6 rounded-xl text-lg font-bold outline-none focus:border-purple-300 focus:ring-2 focus:ring-purple-100" placeholder="0" value={convertValues.thb} onChange={handleThbChange}/></div>
+                                    <div className="flex justify-center -my-2 relative z-10"><div className="bg-stone-100 p-2 rounded-full border border-white shadow-sm"><ArrowRightLeft size={16} className="text-stone-400"/></div></div>
+                                    <div className="relative"><label className="text-[10px] font-bold text-stone-400 absolute top-2 left-3">KRW (원)</label><input type="number" className="w-full bg-white border border-stone-200 p-3 pt-6 rounded-xl text-lg font-bold outline-none focus:border-purple-300 focus:ring-2 focus:ring-purple-100" placeholder="0" value={convertValues.krw} onChange={handleKrwChange}/></div>
+                                </div>
+                                <button onClick={() => setConvertValues({thb: '', krw: ''})} className="w-full mt-6 py-3 rounded-xl bg-stone-100 text-stone-500 font-bold text-sm hover:bg-stone-200">초기화</button>
+                            </div>
+                        </div>
+                    )}
+                    {deleteTarget && (
+                        <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-6">
+                            <div className="bg-white w-full max-w-sm p-6 rounded-2xl shadow-xl animate-in zoom-in-95 duration-200">
+                                <h3 className="text-lg font-bold text-stone-800 mb-2">일정 삭제</h3><p className="text-stone-500 text-sm mb-6">정말로 이 일정을 삭제하시겠습니까?<br/><span className="text-xs text-stone-400">이 작업은 되돌릴 수 없습니다.</span></p>
+                                <div className="flex gap-3"><button onClick={cancelDelete} className="flex-1 py-3 rounded-xl bg-stone-100 text-stone-600 font-bold text-sm hover:bg-stone-200 transition-colors">취소</button><button onClick={confirmDelete} className="flex-1 py-3 rounded-xl bg-red-500 text-white font-bold text-sm hover:bg-red-600 shadow-lg shadow-red-200 transition-colors">삭제</button></div>
+                            </div>
+                        </div>
+                    )}
                 </div>
             );
         };
 
         const root = ReactDOM.createRoot(document.getElementById('root'));
-        root.render(<ThesisScheduler />);
+        root.render(<BangkokPlanner />);
     </script>
 </body>
 </html>
+
